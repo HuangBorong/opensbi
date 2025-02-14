@@ -1085,6 +1085,9 @@ sbi_hart_switch_mode(unsigned long arg0, unsigned long arg1,
 		}
 	}
 
+	csr_set(CSR_MIE, MIP_MSIP | MIP_MTIP | MIP_MEIP);
+	csr_set(CSR_MSTATUS, MSTATUS_MIE | MSTATUS_MPIE);
+
 	register unsigned long a0 asm("a0") = arg0;
 	register unsigned long a1 asm("a1") = arg1;
 	__asm__ __volatile__("mret" : : "r"(a0), "r"(a1));
