@@ -15,7 +15,27 @@
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/irqchip/fdt_irqchip.h>
 #include <sbi_utils/irqchip/imsic.h>
+#include <sbi/sbi_console.h>
 
+static void dump_imsic_data(struct imsic_data *imsic)
+{	
+	int i;
+
+	sbi_printf("IMSIC mode: %s\n", imsic->targets_mmode ? "M-MODE" : "S-MODE");
+	sbi_printf("guest_index_bits = %u\n", imsic->guest_index_bits);
+	sbi_printf("hart_index_bits = %u\n", imsic->hart_index_bits);
+	sbi_printf("group_index_bits = %u\n", imsic->group_index_bits);
+	sbi_printf("group_index_shift = %u\n", imsic->group_index_shift);
+	sbi_printf("num_ids = %lu\n", imsic->num_ids);
+
+	for (i = 0; i < IMSIC_MAX_REGS; i++)
+	{
+		if (imsic->regs[i].addr && imsic->regs[i].size)
+		{
+			sbi_printf("regs[%d] = { addr = 0x%lx, size = 0x%lx }\n", i, imsic->regs[i].addr, imsic->regs[i].size);
+		}
+	}
+}
 static int irqchip_imsic_update_hartid_table(const void *fdt, int nodeoff,
 					     struct imsic_data *id)
 {
@@ -71,6 +91,8 @@ static int irqchip_imsic_cold_init(const void *fdt, int nodeoff,
 	rc = fdt_parse_imsic_node(fdt, nodeoff, id);
 	if (rc || !id->targets_mmode)
 		goto fail_free_data;
+
+	dump_imsic_data(id);
 
 	rc = imsic_cold_irqchip_init(id);
 	if (rc)
